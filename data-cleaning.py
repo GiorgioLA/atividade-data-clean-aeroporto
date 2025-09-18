@@ -50,7 +50,7 @@ def clean_dadosconsumidor2024():
     'Tempo Resposta (em dias)': 'float64'
     }
 
-    dados_consumidor = dd.read_csv("dadosconsumidor2024.csv", 
+    dados_consumidor =dd.read_csv("dadosconsumidor2024.csv", 
                                    sep=';', 
                                    dtype=dadosConsumidorDtype, 
                                    parse_dates=['Data e Hora Resposta'],

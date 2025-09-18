@@ -1,5 +1,41 @@
+import boto3
+import botocore # erros de boto3 para exceptions (404, ver se existe)
 import pandas as pd
 import re
+
+# ====================== #
+#        Config          #
+# ====================== # 
+
+regiao='us-east-1'
+nome_bucket_raw=''
+nome_bucket_trusted=''
+
+client = boto3.client('s3', region_name=regiao)
+s3 = boto3.resource('s3', region_name=regiao)
+
+# ====================== #
+#       Functions        #
+# ====================== # 
+
+def deletar_arquivo_se_existe(bucketName, filePath):
+    try:  
+        s3.Object(bucketName, filePath).load()
+    except botocore.exceptions.ClientError as erro:
+        # Arquivo não existe
+        if erro.response['Error']['Code'] == '404':
+            return 'arquivo não existe'
+        else: 
+        # Erro inesperado
+            raise erro
+    else:
+        # Deletando arquivo (mais performático, eu acho)
+        s3.Object(bucketName, filePath).delete()
+        return 'arquivo deletado'
+    
+def subir_arquivo_deletando_se_existe(bucketName, filePath, fileNameOnBucket):
+    deletar_arquivo_se_existe(bucketName, filePath)
+    client.upload_file(filePath ,bucketName, fileNameOnBucket)
 
 # === Leitura do arquivo ===
 base_de_dados ="Empresas Aereas.xlsx"
@@ -39,8 +75,13 @@ def padronizar_email(email):
     return ", ".join(emails)
 
 def padronizar_data(data):
-    """Converte para datetime se possível."""
-    return pd.to_datetime(data, errors="coerce")
+    """Mantém vazio se não for data válida, caso contrário retorna yyyy-mm-dd como string."""
+    if pd.isna(data) or str(data).strip() == "":
+        return ""
+    try:
+        return pd.to_datetime(data).strftime("%Y-%m-%d")
+    except (ValueError, TypeError):
+        return ""
 
 def padronizar_endereco(endereco):
     """Transforma endereço para minúsculas e remove espaços extras."""
@@ -90,4 +131,12 @@ if "País Sede" in df.columns:
 output_file = "Empresas_Aereas_Tratado.xlsx"
 df.to_excel(output_file, index=False)
 
+# Salva arquivo tratado localmente
 output_file
+
+# Envia para o bucket trusted
+subir_arquivo_deletando_se_existe(
+    nome_bucket_trusted,
+    output_file,
+    "trusted/Empresas_Aereas_Tratado.xlsx"
+)
