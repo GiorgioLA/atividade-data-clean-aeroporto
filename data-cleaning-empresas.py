@@ -3,20 +3,34 @@ import botocore # erros de boto3 para exceptions (404, ver se existe)
 import pandas as pd
 import re
 
-# ====================== #
-#        Config          #
-# ====================== # 
+# ======== Configuração AWS =======
+
+# Obs>>>>>>>>>> não esquecer de configurar as credenciais AWS no ambiente local
 
 regiao='us-east-1'
-nome_bucket_raw=''
-nome_bucket_trusted=''
+nome_bucket_raw='bucketz-0001'
+nome_bucket_trusted='bucketz-0002'
 
 client = boto3.client('s3', region_name=regiao)
 s3 = boto3.resource('s3', region_name=regiao)
 
-# ====================== #
-#       Functions        #
-# ====================== # 
+# ======== Funcções Bucket =======
+
+def baixar_arquivo(bucketName, fileNameOnBucket, localPath):
+    """
+    Baixa um arquivo do S3 e salva localmente.
+    :param bucketName: Nome do bucket S3
+    :param fileNameOnBucket: Caminho/arquivo dentro do bucket
+    :param localPath: Caminho onde salvar localmente
+    """
+    try:
+        client.download_file(bucketName, fileNameOnBucket, localPath)
+        print(f"Arquivo '{fileNameOnBucket}' baixado de '{bucketName}' para '{localPath}'")
+    except botocore.exceptions.ClientError as erro:
+        if erro.response['Error']['Code'] == "404":
+            print("Arquivo não encontrado no bucket")
+        else:
+            raise erro
 
 def deletar_arquivo_se_existe(bucketName, filePath):
     try:  
@@ -36,10 +50,6 @@ def deletar_arquivo_se_existe(bucketName, filePath):
 def subir_arquivo_deletando_se_existe(bucketName, filePath, fileNameOnBucket):
     deletar_arquivo_se_existe(bucketName, filePath)
     client.upload_file(filePath ,bucketName, fileNameOnBucket)
-
-# === Leitura do arquivo ===
-base_de_dados ="Empresas Aereas.xlsx"
-df = pd.read_excel(base_de_dados, sheet_name="20250106") 
 
 # === Funções auxiliares ===
 
@@ -98,6 +108,14 @@ def classificar_empresa(pais):
         return "Nacional"
     return "Estrangeira"
 
+# === Baixar e ler arquivo do bucket RAW === 
+
+raw_file_s3 = "Empresas Aereas.xlsx"   # caminho no bucket raw
+base_de_dados = "Empresas_Aereas.xlsx"     # nome local após download
+
+baixar_arquivo(nome_bucket_raw, raw_file_s3, base_de_dados)
+
+df = pd.read_excel(base_de_dados, sheet_name="20250106") 
 
 # === Pipeline ===
 
@@ -138,5 +156,5 @@ output_file
 subir_arquivo_deletando_se_existe(
     nome_bucket_trusted,
     output_file,
-    "trusted/Empresas_Aereas_Tratado.xlsx"
+    "Empresas_Aereas_Tratado.xlsx"
 )
