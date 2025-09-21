@@ -8,8 +8,8 @@ import re
 # Obs>>>>>>>>>> não esquecer de configurar as credenciais AWS no ambiente local
 
 regiao='us-east-1'
-nome_bucket_raw='bucketz-0001'
-nome_bucket_trusted='bucketz-0002'
+nome_bucket_raw='teste-bucket-raw-bruno'
+nome_bucket_trusted='teste-bucket-trusted-bruno'
 
 client = boto3.client('s3', region_name=regiao)
 s3 = boto3.resource('s3', region_name=regiao)
@@ -54,37 +54,36 @@ def subir_arquivo_deletando_se_existe(bucketName, filePath, fileNameOnBucket):
 # Funções
 
 def salvar_csv(df, nome_csv):
-    output_file = nome_csv
+    output_file = f"./dados_atividade/{nome_csv}"
     df.to_csv(output_file, index=False)
     output_file
 
-def separar_dataframe_por_mes(df, lista_index):
+def separar_dataframe_por_mes(df, lista_index, bucketName):
     mes = 1
     for i in range(len(lista_index)):
         inicio = lista_index[i]
         fim = lista_index[i+1] if i < len(lista_index)-1 else None
         novo_df = df.iloc[inicio:fim, :] if fim != None else df.iloc[inicio:, :]
+        novo_nome = f"VRA_2024_{mes:02}.csv"
 
-        salvar_csv(novo_df, f"VRA_2024_{mes:02}.csv")
+        salvar_csv(novo_df, novo_nome)
+        subir_arquivo_deletando_se_existe(
+            bucketName,
+            f"./dados_atividade/{novo_nome}",
+            novo_nome
+        )
         mes += 1
 
 # === Baixar e ler arquivo do bucket RAW === 
 
-raw_file_s3 = "Empresas Aereas.xlsx"   # caminho no bucket raw
-base_de_dados = "VRA_2024.csv"     # nome local após download
+raw_file_s3 = "VRA_2024.csv"   # caminho no bucket raw
+base_de_dados = "./dados_atividade/VRA_2024.csv"     # nome local após download
 
-# baixar_arquivo(nome_bucket_raw, raw_file_s3, base_de_dados)
+baixar_arquivo(nome_bucket_raw, raw_file_s3, base_de_dados)
 index_headers_repetidos = [0, 86610, 163842, 245317, 326015, 404897, 482977, 570728, 656095, 737544, 821837, 901865]
 df = pd.read_csv(base_de_dados, sep=';') 
 
 # === Pipeline ===
 
 # Aplicar transformações
-separar_dataframe_por_mes(df, index_headers_repetidos)
-
-# Envia para o bucket trusted
-# subir_arquivo_deletando_se_existe(
-#     nome_bucket_trusted,
-#     output_file,
-#     "Empresas_Aereas_Tratado.xlsx"
-# )
+separar_dataframe_por_mes(df, index_headers_repetidos, nome_bucket_trusted)
