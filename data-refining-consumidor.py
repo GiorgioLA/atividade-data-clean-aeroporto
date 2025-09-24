@@ -11,8 +11,7 @@ import re # utilizado para limpeza de caracteres especiais
 # ====================== # 
 
 regiao='us-east-1'
-nome_bucket_raw='s3-raw-venuste'
-nome_bucket_trusted='s3-trusted-venuste'
+nome_bucket_client='s3-raw-venuste'
 
 client = boto3.client('s3', region_name=regiao)
 s3 = boto3.resource('s3', region_name=regiao)
@@ -55,7 +54,7 @@ def subir_arquivo_deletando_se_existe(bucketName, filePath, fileNameOnBucket):
     deletar_arquivo_se_existe(bucketName, filePath)
     client.upload_file(filePath ,bucketName, fileNameOnBucket)
 
-def clean_dadosconsumidor2024(mes, filePath="dados_atividade/dadosconsumidor2024.csv", uploadBucket=False):
+def clean_dadosconsumidor2024(filePath="dados_atividade/dadosconsumidor2024.csv", uploadBucket=False):
 
     dadosConsumidorDtype={
     'Data e Hora Análise': 'object',
@@ -70,26 +69,17 @@ def clean_dadosconsumidor2024(mes, filePath="dados_atividade/dadosconsumidor2024
                                    parse_dates=['Data e Hora Resposta'],
                                    date_format=dd.to_datetime
                                 )
-    dados_consumidor=dados_consumidor[dados_consumidor['Mês Abertura'] == mes]
+    dados_consumidor=dados_consumidor[dados_consumidor['Mês Abertura'] > 5]
 
-    dados_consumidor['Data Abertura']=dados_consumidor['Data Abertura'].str[8:]
+    dados_consumidor['Data Abertura']=dados_consumidor['Data Abertura'].str[8:].astype(int)
 
     dados_consumidor=dados_consumidor.replace(mapa, regex=True)
     
-    fileName = ''
-    if (mes < 10):
-        fileName = 'reclamacoes20240' + str(mes) + '.csv'  
-    else:
-        fileName = 'reclamacoes2024' + str(mes) + '.csv'
+    fileName = 'dadodconsumidor2024S2.csv'
 
     dados_consumidor.to_csv(fileName)
 
-    if (uploadBucket):
-        subir_arquivo_deletando_se_existe(nome_bucket_trusted, fileName, fileName)
+    # if (uploadBucket):
+    #     subir_arquivo_deletando_se_existe(nome_bucket_trusted, fileName, fileName)
 
-
-
-
-def limpar_arquivos_locais(nome):
-    if os.path.exists(nome):
-        os.remove(nome)
+clean_dadosconsumidor2024()
