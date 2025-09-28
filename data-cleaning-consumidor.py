@@ -11,8 +11,8 @@ import re # utilizado para limpeza de caracteres especiais
 # ====================== # 
 
 regiao='us-east-1'
-nome_bucket_raw='s3-raw-venuste'
-nome_bucket_trusted='s3-trusted-venuste'
+nome_bucket_raw='bucket-raw-g3'
+nome_bucket_trusted='bucket-trusted-g3'
 
 client = boto3.client('s3', region_name=regiao)
 s3 = boto3.resource('s3', region_name=regiao)
@@ -68,7 +68,8 @@ def clean_dadosconsumidor2024(mes, filePath="dados_atividade/dadosconsumidor2024
                                    sep=';', 
                                    dtype=dadosConsumidorDtype, 
                                    parse_dates=['Data e Hora Resposta'],
-                                   date_format=dd.to_datetime
+                                   date_format=dd.to_datetime,
+                                   skiprows=1
                                 )
     dados_consumidor=dados_consumidor[dados_consumidor['Mês Abertura'] == mes]
 
@@ -82,7 +83,7 @@ def clean_dadosconsumidor2024(mes, filePath="dados_atividade/dadosconsumidor2024
     else:
         fileName = 'reclamacoes2024' + str(mes) + '.csv'
 
-    dados_consumidor.to_csv(fileName, encoding='utf-8-sig')
+    dados_consumidor.to_csv(fileName, encoding='utf-8-sig', sep=";")
 
     if (uploadBucket):
         subir_arquivo_deletando_se_existe(nome_bucket_trusted, fileName, fileName)

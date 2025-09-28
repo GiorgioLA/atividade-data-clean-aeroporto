@@ -6,9 +6,9 @@ import re
 # --------------- Configuranções da AWS ---------------
 
 regiao='us-east-1'
-bucket_raw = "teste-ad1-raw"
-bucket_trusted = "teste-ad1-trusted"
-nome_bucket_client='client-teste-ativ-tabelao'
+bucket_raw = "bucket-raw-g3"
+bucket_trusted = "bucket-trusted-g3"
+nome_bucket_client='bucket-client-g3'
 client = boto3.client('s3', region_name=regiao)
 s3 = boto3.resource('s3', region_name=regiao)
 
@@ -24,7 +24,7 @@ df1 = pd.read_csv(raw_file1, sep=';', usecols=[
     "Partida Real","Sigla ICAO Aeroporto Destino",
     "Descrição Aeroporto Destino","Chegada Real","Situação Voo"
     ]) 
-df1 = df1.iloc[404897:, :]
+df1 = df1.iloc[482977:, :]
 df1 = df1[df1["Sigla ICAO Aeroporto Origem"].str.startswith("SB") &
         df1["Sigla ICAO Aeroporto Destino"].str.startswith("SB")]
 # output = df1.to_csv("VRA_tratado.csv", index=False, sep=";")
