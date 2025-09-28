@@ -82,11 +82,24 @@ def clean_dadosconsumidor2024(mes, filePath="dados_atividade/dadosconsumidor2024
     else:
         fileName = 'reclamacoes2024' + str(mes) + '.csv'
 
-    dados_consumidor.to_csv(fileName)
+    dados_consumidor.to_csv(fileName, encoding='utf-8-sig')
 
     if (uploadBucket):
         subir_arquivo_deletando_se_existe(nome_bucket_trusted, fileName, fileName)
 
+
+clean_dadosconsumidor2024(1,uploadBucket=True)
+clean_dadosconsumidor2024(2,uploadBucket=True)
+clean_dadosconsumidor2024(3,uploadBucket=True)
+clean_dadosconsumidor2024(4,uploadBucket=True)
+clean_dadosconsumidor2024(5,uploadBucket=True)
+clean_dadosconsumidor2024(6,uploadBucket=True)
+clean_dadosconsumidor2024(7,uploadBucket=True)
+clean_dadosconsumidor2024(8,uploadBucket=True)
+clean_dadosconsumidor2024(9,uploadBucket=True)
+clean_dadosconsumidor2024(10,uploadBucket=True)
+clean_dadosconsumidor2024(11,uploadBucket=True)
+clean_dadosconsumidor2024(12,uploadBucket=True)
 
 
 
